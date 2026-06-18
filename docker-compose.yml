@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB:       dbcloud
+      POSTGRES_USER:     dbcloud
+      POSTGRES_PASSWORD: dbcloud_secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dbcloud"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3001:3001"
+  #   environment:
+  #     PORT:          "3001"
+  #     # PostgreSQL (internal store for users + instance records)
+  #     DB_HOST:       postgres
+  #     DB_PORT:       "5432"
+  #     DB_NAME:       dbcloud
+  #     DB_USER:       dbcloud
+  #     DB_PASSWORD:   dbcloud_secret
+  #     # JWT secrets — CHANGE THESE IN PRODUCTION
+  #     JWT_SECRET:    change_me_in_production_use_long_random_secret
+  #     JWT_EXPIRES:   15m
+  #     REFRESH_SECRET: change_me_refresh_secret_also_long
+  #     REFRESH_EXPIRES: 7d
+  #     # Kubernetes — mount your kubeconfig or use in-cluster
+  #     KUBECONFIG:    /root/.kube/config
+  #     # Optional: set a specific StorageClass for PVCs
+  #     # STORAGE_CLASS: standard
+  #     FRONTEND_URL:  http://localhost:5173
+  #   volumes:
+  #     # Mount your local kubeconfig so backend can talk to your cluster
+  #     - ${HOME}/.kube:/root/.kube:ro
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   restart: on-failure
+
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "5173:80"
+  #   depends_on:
+  #     - backend
+  #   restart: unless-stopped
+
+volumes:
+  postgres_data:
